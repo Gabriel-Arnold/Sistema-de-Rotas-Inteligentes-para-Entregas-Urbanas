@@ -48,6 +48,10 @@ void carregarExemplo(Grafo *grafo) {
     inserirAresta(grafo, 4, 5, 3);
 }
 
+void exibirPonto(int vertice) {
+    printf("%c", 'A' + vertice);
+}
+
 void exibirMatriz(Grafo *grafo) {
     int i, j;
 
@@ -69,6 +73,65 @@ void exibirMatriz(Grafo *grafo) {
 
         printf("\n");
     }
+}
+
+void bfs(Grafo *grafo, int inicio) {
+    int visitado[MAX_VERTICES] = {0};
+    int fila[MAX_VERTICES];
+    int frente = 0, tras = 0;
+    int atual, i;
+
+    if (inicio < 0 || inicio >= grafo->vertices) {
+        printf("Vertice inicial invalido.\n");
+        return;
+    }
+
+    visitado[inicio] = 1;
+    fila[tras++] = inicio;
+
+    printf("\nOrdem de visita BFS: ");
+
+    while (frente < tras) {
+        atual = fila[frente++];
+        exibirPonto(atual);
+        printf(" ");
+
+        for (i = 0; i < grafo->vertices; i++) {
+            if (grafo->matriz[atual][i] > 0 && !visitado[i]) {
+                visitado[i] = 1;
+                fila[tras++] = i;
+            }
+        }
+    }
+
+    printf("\nAplicacao: mostra os pontos alcancaveis a partir do ponto escolhido.\n");
+}
+
+void dfsRecursivo(Grafo *grafo, int atual, int visitado[]) {
+    int i;
+
+    visitado[atual] = 1;
+    exibirPonto(atual);
+    printf(" ");
+
+    for (i = 0; i < grafo->vertices; i++) {
+        if (grafo->matriz[atual][i] > 0 && !visitado[i]) {
+            dfsRecursivo(grafo, i, visitado);
+        }
+    }
+}
+
+void dfs(Grafo *grafo, int inicio) {
+    int visitado[MAX_VERTICES] = {0};
+
+    if (inicio < 0 || inicio >= grafo->vertices) {
+        printf("Vertice inicial invalido.\n");
+        return;
+    }
+
+    printf("\nOrdem de visita DFS: ");
+    dfsRecursivo(grafo, inicio, visitado);
+    printf("\nAplicacao: ajuda a explorar a cobertura das rotas existentes.\n");
 }
 
 int lerVertice(char mensagem[], int quantidadeVertices) {
@@ -116,19 +179,22 @@ void cadastrarGrafo(Grafo *grafo) {
 void exibirMenu(void) {
     printf("\n===== SISTEMA DE PLANEJAMENTO DE ROTAS =====\n");
     printf("1 - Exibir matriz de adjacencia\n");
-    printf("2 - Cadastrar novo mapa\n");
-    printf("3 - Sair\n");
+    printf("2 - Executar BFS\n");
+    printf("3 - Executar DFS\n");
+    printf("4 - Cadastrar novo mapa\n");
+    printf("5 - Sair\n");
     printf("Escolha uma opcao: ");
 }
 
 int main(void) {
     Grafo grafo;
     int opcao;
+    int inicio;
 
     carregarExemplo(&grafo);
 
     printf("Sistema iniciado com um mapa exemplo de 6 pontos: A, B, C, D, E e F.\n");
-    printf("Use a opcao 2 se quiser cadastrar outro mapa.\n");
+    printf("Use a opcao 4 se quiser cadastrar outro mapa.\n");
 
     do {
         exibirMenu();
@@ -140,17 +206,27 @@ int main(void) {
                 break;
 
             case 2:
-                cadastrarGrafo(&grafo);
+                inicio = lerVertice("Vertice inicial para BFS", grafo.vertices);
+                bfs(&grafo, inicio);
                 break;
 
             case 3:
+                inicio = lerVertice("Vertice inicial para DFS", grafo.vertices);
+                dfs(&grafo, inicio);
+                break;
+
+            case 4:
+                cadastrarGrafo(&grafo);
+                break;
+
+            case 5:
                 printf("Encerrando o sistema.\n");
                 break;
 
             default:
                 printf("Opcao invalida.\n");
         }
-    } while (opcao != 3);
+    } while (opcao != 5);
 
     return 0;
 }
