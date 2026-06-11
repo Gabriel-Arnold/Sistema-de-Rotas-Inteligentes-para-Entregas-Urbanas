@@ -1,6 +1,6 @@
 #include <stdio.h>
-
 #define MAX_VERTICES 50
+#define INF 1000000000
 
 typedef struct {
     int vertices;
@@ -134,6 +134,97 @@ void dfs(Grafo *grafo, int inicio) {
     printf("\nAplicacao: ajuda a explorar a cobertura das rotas existentes.\n");
 }
 
+int menorDistancia(int distancia[], int visitado[], int vertices) {
+    int menor = INF;
+    int indiceMenor = -1;
+    int i;
+
+    for (i = 0; i < vertices; i++) {
+        if (!visitado[i] && distancia[i] < menor) {
+            menor = distancia[i];
+            indiceMenor = i;
+        }
+    }
+
+    return indiceMenor;
+}
+
+void imprimirCaminhoDijkstra(int anterior[], int origem, int destino) {
+    int caminho[MAX_VERTICES];
+    int tamanho = 0;
+    int atual = destino;
+    int i;
+
+    while (atual != -1) {
+        caminho[tamanho++] = atual;
+
+        if (atual == origem) {
+            break;
+        }
+
+        atual = anterior[atual];
+    }
+
+    for (i = tamanho - 1; i >= 0; i--) {
+        exibirPonto(caminho[i]);
+
+        if (i > 0) {
+            printf(" -> ");
+        }
+    }
+}
+
+void dijkstra(Grafo *grafo, int origem, int destino) {
+    int distancia[MAX_VERTICES];
+    int visitado[MAX_VERTICES] = {0};
+    int anterior[MAX_VERTICES];
+    int i, j, atual;
+
+    if (origem < 0 || origem >= grafo->vertices || destino < 0 || destino >= grafo->vertices) {
+        printf("Vertices invalidos.\n");
+        return;
+    }
+
+    for (i = 0; i < grafo->vertices; i++) {
+        distancia[i] = INF;
+        anterior[i] = -1;
+    }
+
+    distancia[origem] = 0;
+
+    for (i = 0; i < grafo->vertices - 1; i++) {
+        atual = menorDistancia(distancia, visitado, grafo->vertices);
+
+        if (atual == -1) {
+            break;
+        }
+
+        visitado[atual] = 1;
+
+        for (j = 0; j < grafo->vertices; j++) {
+            if (!visitado[j] && grafo->matriz[atual][j] > 0 &&
+                distancia[atual] + grafo->matriz[atual][j] < distancia[j]) {
+                distancia[j] = distancia[atual] + grafo->matriz[atual][j];
+                anterior[j] = atual;
+            }
+        }
+    }
+
+    if (distancia[destino] == INF) {
+        printf("\nNao existe caminho entre ");
+        exibirPonto(origem);
+        printf(" e ");
+        exibirPonto(destino);
+        printf(".\n");
+        return;
+    }
+
+    printf("\nMenor distancia: %d\n", distancia[destino]);
+    printf("Caminho percorrido: ");
+    imprimirCaminhoDijkstra(anterior, origem, destino);
+    printf("\n");
+}
+
 int lerVertice(char mensagem[], int quantidadeVertices) {
     char letra;
 
@@ -181,20 +272,21 @@ void exibirMenu(void) {
     printf("1 - Exibir matriz de adjacencia\n");
     printf("2 - Executar BFS\n");
     printf("3 - Executar DFS\n");
-    printf("4 - Cadastrar novo mapa\n");
-    printf("5 - Sair\n");
+    printf("4 - Encontrar menor caminho (Dijkstra)\n");
+    printf("5 - Cadastrar novo mapa\n");
+    printf("6 - Sair\n");
     printf("Escolha uma opcao: ");
 }
 
 int main(void) {
     Grafo grafo;
     int opcao;
-    int inicio;
+    int inicio, origem, destino;
 
     carregarExemplo(&grafo);
 
     printf("Sistema iniciado com um mapa exemplo de 6 pontos: A, B, C, D, E e F.\n");
-    printf("Use a opcao 4 se quiser cadastrar outro mapa.\n");
+    printf("Use a opcao 5 se quiser cadastrar outro mapa.\n");
 
     do {
         exibirMenu();
@@ -216,17 +308,23 @@ int main(void) {
                 break;
 
             case 4:
-                cadastrarGrafo(&grafo);
+                origem = lerVertice("Vertice de origem", grafo.vertices);
+                destino = lerVertice("Vertice de destino", grafo.vertices);
+                dijkstra(&grafo, origem, destino);
                 break;
 
             case 5:
+                cadastrarGrafo(&grafo);
+                break;
+
+            case 6:
                 printf("Encerrando o sistema.\n");
                 break;
 
             default:
                 printf("Opcao invalida.\n");
         }
-    } while (opcao != 5);
+    } while (opcao != 6);
 
     return 0;
 }
